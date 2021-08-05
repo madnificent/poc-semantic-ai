@@ -19,7 +19,6 @@ class BertClassifier(nn.Module):
             nn.Sigmoid(),
             nn.Linear(config['hidden_size'], config['num_labels']),
             nn.Softmax(dim=1),
-
         )
 
         self.id_dict = {}

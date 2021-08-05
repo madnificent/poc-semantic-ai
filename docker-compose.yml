@@ -36,6 +36,7 @@ services:
       MODE: "production"
       ACCEPT_FILENAME: "true"
       ACCEPT_OPTIONS: "true"
+      # MU_SPARQL_ENDPOINT: "https://dbpedia.org/sparql"
     volumes:
       - ./config/dataconvert:/config
       - ./share:/share
@@ -43,15 +44,16 @@ services:
       - db
 
   label-trainer:
-    image: redpencil/ai-label-trainer
+    build: ./text-abbrev-trainer/
+    # image: redpencil/ai-label-trainer
     environment:
       LOG_LEVEL: "debug"
       MODE: "development"
-      TASK: "predicates"
+      TASK: "abbreviations"
     links:
       - db:database
     volumes:
-      - ./config/label-predictor/constants.py:/app/constants.py
+      # - ./config/label-predictor/constants.py:/app/constants.py
       - ./share:/share
   #    deploy:
   #      resources:
@@ -68,6 +70,7 @@ services:
     links:
       - db:database
     volumes:
+      # - ./config/label-predictor/constants.py:/app/constants.py
       - ./share:/share
     depends_on:
       - db
@@ -78,8 +81,6 @@ services:
       - db:database
     environment:
       LOG_LEVEL: "debug"
-    volumes:
-      - ./jobs:/app
     depends_on:
       - db
 
