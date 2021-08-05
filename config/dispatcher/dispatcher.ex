@@ -35,8 +35,12 @@ defmodule Dispatcher do
   match "/jobs/*path" do
     Proxy.forward conn, path, "http://jobs/jobs/"
   end
-  match "/label/*path" do
-    Proxy.forward conn, path, "http://predicate-predictor/label"
+  # match "/label/*path" do
+  #   Proxy.forward conn, path, "http://predicate-predictor/label"
+  # end
+
+  match "/abbrev/*path" do
+    Proxy.forward conn, path, "http://abbrev-predictor/abbreviate/"
   end
 
   match "/files/*path" do

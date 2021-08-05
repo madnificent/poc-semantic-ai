@@ -43,8 +43,8 @@ services:
     depends_on:
       - db
 
-  label-trainer:
-    build: ./text-abbrev-trainer/
+  abbrev-trainer:
+    build: ./abbrev-trainer/
     # image: redpencil/ai-label-trainer
     environment:
       LOG_LEVEL: "debug"
@@ -54,6 +54,7 @@ services:
       - db:database
     volumes:
       # - ./config/label-predictor/constants.py:/app/constants.py
+      - ./abbrev-trainer/:/app/
       - ./share:/share
   #    deploy:
   #      resources:
@@ -62,18 +63,34 @@ services:
     depends_on:
       - db
 
-  label-predictor:
-    image: redpencil/ai-label-predictor
+  abbrev-predictor:
+    build: ./abbrev-predictor/
     environment:
       LOG_LEVEL: "debug"
-      MODE: "production"
+      MODE: "development"
     links:
       - db:database
     volumes:
       # - ./config/label-predictor/constants.py:/app/constants.py
+      # - ./abbrev-predictor/:/app/
       - ./share:/share
     depends_on:
       - db
+
+  # label-predictor:
+  #   build: ./abbrev-predictor/
+  #   # image: redpencil/ai-label-predictor
+  #   environment:
+  #     LOG_LEVEL: "debug"
+  #     MODE: "production"
+  #   links:
+  #     - db:database
+  #   volumes:
+  #     # - ./config/label-predictor/constants.py:/app/constants.py
+  #     - ./abbrev-predictor/:/app/
+  #     - ./share:/share
+  #   depends_on:
+  #     - db
 
   jobs:
     image: redpencil/ai-job

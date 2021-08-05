@@ -1,0 +1,16 @@
+SELECT DISTINCT ?long ?short
+WHERE {
+  {
+    ?s <http://dbpedia.org/ontology/abbreviation> ?short;
+      rdfs:label ?long.
+  } UNION {
+    ?s <http://mu.semte.ch/vocabularies/ext/tickerLabel> ?short;
+       <http://mu.semte.ch/vocabularies/ext/companyLabel> ?long
+  }
+  BIND( strlen(?long) AS ?longLength )
+  BIND( strlen(?short) AS ?shortLength )
+  FILTER( ?longLength <= 12 )
+  FILTER( ?shortLength <= 10 )
+  FILTER( ?longLength > 5 )
+  FILTER( ?shortLength > 2 )
+}

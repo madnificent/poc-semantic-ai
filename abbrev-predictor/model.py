@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from . constants import *
 from transformers import AutoModel
 
 class Abbreviator(nn.Module):
@@ -12,11 +13,10 @@ class Abbreviator(nn.Module):
             nn.ReLU(),
             nn.Linear(1024, 2048),
             nn.ReLU(),
-            nn.Linear(2028, 1024),
+            nn.Linear(2048, 1024),
             nn.ReLU(),
             nn.Linear(1024, LAST_LAYER_SIZE),
             nn.Sigmoid())
 
     def forward(self, input_seq):
         return self.abbrnet(input_seq)
-        
