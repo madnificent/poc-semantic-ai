@@ -47,6 +47,8 @@ def train(data):
     model.zero_grad()
     training_acc_list, validation_acc_list = [], []
 
+    torch.set_printoptions(threshold=10_000)
+
     for epoch in range(NUM_EPOCHS):
         epoch_loss = 0.0
         train_correct_total = 0
@@ -56,13 +58,18 @@ def train(data):
         for step, batch in enumerate(train_iterator):
             model.train(True)
 
-            inputs = batch[0]
-            labels = batch[1].to(DEVICE)
+            source = batch[0]
+            target = batch[1].to(DEVICE)
 
             # print( "inputs: %s", inputs)
             # print( "labels: %s", labels)
 
-            logits = model(inputs)
+            print( "Source:", source )
+            print( "Target:", target )
+            print( "Source shape:", source.shape )
+            print( "Target shape:", target.shape )
+
+            output = model(source, target)
 
             # print( "calculate logits" )
             # print( "logits: %s", logits)
@@ -73,23 +80,28 @@ def train(data):
             # We should learn to take the cost into account in which we
             # only care about the "cost" of the effect.
             
-            flattened_logits = torch.cat(logits).view(-1,len(SYMBOLS)) # torch.flatten(logits)
-            flattened_labels = torch.flatten(labels)
+            # flattened_logits = torch.cat(logits).view(-1,len(SYMBOLS)) # torch.flatten(logits)
+            # flattened_labels = torch.flatten(labels)
+            output = output[1:].reshape(-1, output.shape[2])
+            target = target[1:].reshape(-1)
 
             # print("doing loss calculation")
 
+            optimizer.zero_grad()
             loss = loss_fn(flattened_logits, flattened_labels)
 
             # print( "loss" )
             loss.backward()
+            optimizer.step()
 
             # print( "add-epoch-loss" )
             epoch_loss += loss.item()
 
-            # print( "if accumulation step" )
-            if (step + 1) % GRADIENT_ACCUMULATION_STEPS == 0:
-                optimizer.step()
-                optimizer.zero_grad()
+
+            # # print( "if accumulation step" )
+            # if (step + 1) % GRADIENT_ACCUMULATION_STEPS == 0:
+            #     optimizer.step()
+            #     optimizer.zero_grad()
 
             # print( "Oh, doing a prediction, maybe?" )
             # _, predicted = torch.max(logits.data, 1)

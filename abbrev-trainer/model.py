@@ -3,31 +3,72 @@ import torch.nn as nn
 from constants import *
 from transformers import AutoModel
 
+class Encoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.encode_embedding = nn.Sequential(
+            nn.Embedding(len(SYMBOLS), 128),
+            nn.Dropout(0.05)
+        )
+
+        self.encode_lstm = nn.LSTM(
+            128, 256,
+            3, # lstm layers
+            dropout=0.05
+        )
+
+    def forward(self, content):
+        embedding = self.encode_embedding(content)
+        response, (hidden, cell) = self.encode_lstm( embedding )
+        return hidden, cell
+
+class Decoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.decode_embedding = nn.Sequential(
+            nn.Embedding(len(SYMBOLS), 128),
+            nn.Dropout(0.05)
+        )
+
+        self.decode_lstm = nn.LSTM(
+            128, 256, 3, dropout=0.05            
+        )
+
+        self.decode_predict = nn.Linear(256,len(SYMBOLS))
+
+    def forward(self, previous_token, hidden, cell):
+        embedding = self.encode_embedding( previous_token.unsqueeze(0) )
+        response, (hidden, cell) = self.decode_lstm( embedding, (hidden, cell) )
+        predictions = self.decode_predict(response).squeeze(0)
+
+        return predictions, hidden, cell
+
+
 class Abbreviator(nn.Module):
 
     def __init__(self):
         super().__init__()
 
-        self.prediction_layers = [ nn.Linear( 1024, len(SYMBOLS) ) for _ in range(MAX_OUT_LEN) ]
+        self.encoder = Encoder()
+        self.decoder = Decoder()
 
-        self.abbrnet = nn.Sequential(
-            nn.Linear(FIRST_LAYER_SIZE, 2048),
-            nn.Sigmoid(),
-            # nn.Linear(2048, 4096),
-            # nn.Sigmoid(),
-            # nn.Dropout(p=0.05),
-            # nn.Linear(4096, 4096),
-            # nn.Sigmoid(),
-            # nn.Linear(4096, 2048),
-            # nn.Sigmoid(),
-            nn.Linear(2048, 1024),
-            nn.Sigmoid(),
-            nn.Linear(1024,1024),
-            nn.ReLU(),
-            # nn.Linear(1024, LAST_LAYER_SIZE)
-            nn.Linear(1024,1024)
-        )
+    def forward(self, source, target, teacher_force_ratio=0.5):
+        batch_size = source.shape[1]
+        target_len = target.shape[0]
+        target_vocab_size = len(SYMBOLS)
 
-    def forward(self, input_seq):
-        abbr_pred = self.abbrnet(input_seq)
-        return [ layer(abbr_pred) for layer in self.prediction_layers ]
+        outputs = torch.zeros(target_len, batch_size, target_vocab_size)
+
+        hidden, cell = self.encoder(source)
+
+        current_character = target[0]
+
+        for idx in range(1, target_len):
+            output, hidden, cell = self.decoder(current_character, hidden, cell)
+            outputs[idx] = output
+            prediction = output.argmax(1)
+            current_character = target[idx] if random.random() < teacher_force_ratio else best_guess
+        
+        return outputs
