@@ -127,7 +127,7 @@ def query_data():
         # predictions = predictions.data.cpu().numpy()[0]
 
         # change the view of NP arrays to extract numbers
-        split_predictions = predictions.view(MAX_OUT_LEN,len(SYMBOLS))
+        split_predictions = torch.cat(predictions).view(MAX_OUT_LEN,len(SYMBOLS))
         log("Predictions")
         log(split_predictions)
         char_indexes = torch.argmax( split_predictions, dim=1 )

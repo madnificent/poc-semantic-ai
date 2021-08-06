@@ -39,7 +39,8 @@ def train(data):
     print('Training Set Size {}, Validation Set Size {}'.format(len(train_indices), len(val_indices)))
 
     # loss_fn = nn.CrossEntropyLoss().to(DEVICE)
-    loss_fn = nn.MultiLabelMarginLoss().to(DEVICE)
+    # loss_fn = nn.MultiLabelMarginLoss().to(DEVICE)
+    loss_fn = nn.CrossEntropyLoss()
 
     optimizer = Adam(model.parameters())
 
@@ -68,8 +69,11 @@ def train(data):
             # print( "labels: %s", labels)
             # print( "logits shape: %s", logits.shape)
             # print( "labels shape: %s", labels.shape)
+
+            # We should learn to take the cost into account in which we
+            # only care about the "cost" of the effect.
             
-            flattened_logits = torch.flatten(logits)
+            flattened_logits = torch.cat(logits).view(-1,len(SYMBOLS)) # torch.flatten(logits)
             flattened_labels = torch.flatten(labels)
 
             # print("doing loss calculation")
@@ -106,7 +110,7 @@ def train(data):
         #         inputs = batch[0]
 
         #         labels = batch[1].to(DEVICE)
-        #         logits = model(**inputs)
+        #         logits = model(inputs)
 
         #         _, predicted = torch.max(logits.data, 1)
         #         correct_reviews_in_batch = (predicted == labels).sum().item()
@@ -117,7 +121,7 @@ def train(data):
         #     print('Training Accuracy {:.4f} - Validation Accurracy {:.4f}'.format(
         #         train_correct_total * 100 / len(train_indices), val_correct_total * 100 / len(val_indices)))
 
-        torch.save(model, MODEL_FILE_PATH[:-4] + f"_epoch-{epoch}" + ".pth")
+        torch.save(model.state_dict(), MODEL_FILE_PATH[:-4] + f"_epoch-{epoch}" + ".pth")
 
     torch.save(model.state_dict(), MODEL_FILE_PATH)
 

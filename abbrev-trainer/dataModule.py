@@ -16,9 +16,9 @@ def encode_string(string, pad_to=False):
   encoded_tensor = [encode_index_for_char(char) for char in string]
   if pad_to:
     pad = [SYMBOLS.index("PAD")] * (pad_to - len(string))
-    return torch.tensor(encoded_tensor + pad)
+    return torch.tensor(encoded_tensor + pad, dtype=torch.long)
   else:
-    return torch.tensor(encoded_tensor)
+    return torch.tensor(encoded_tensor, dtpy=torch.long)
 
 def decode_array(arr, strip_padding=True):
   return "".join([SYMBOLS[idx]
@@ -37,7 +37,7 @@ class AbbrevDataset(Dataset):
         df = pd.DataFrame(data)
 
         df["long"] = df["long"].apply( lambda x: string_to_one_hot( x, MAX_LEN ) )
-        df["short"] = df["short"].apply( lambda x: string_to_one_hot( x, MAX_OUT_LEN, dtype=torch.long ) )
+        df["short"] = df["short"].apply( lambda x: encode_string( x, pad_to=MAX_OUT_LEN ) )
 
         self._df = df
 
